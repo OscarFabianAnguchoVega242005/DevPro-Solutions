@@ -11,9 +11,9 @@
  *
  * Acepta alias de nombre para evitar el error de "variable vacía".
  *
- * Seguridad: la key se incrusta en el JS público, por lo que NUNCA debe ser
- * privada. Este script aborta el build si detecta sb_secret_…, service_role,
- * o un JWT con role="service_role".
+ * Seguridad (fail-closed): la key se incrusta en el JS público, por lo que
+ * NUNCA debe ser privada. El build SOLO acepta formatos públicos conocidos
+ * (sb_publishable_… o un JWT con role="anon"); cualquier otro formato aborta.
  */
 const fs = require('fs');
 const path = require('path');
@@ -58,16 +58,13 @@ function assertPublicKey(key) {
     try {
       const payload = JSON.parse(Buffer.from(b64url(k.split('.')[1]), 'base64').toString('utf8'));
       role = payload && payload.role ? String(payload.role) : '';
-    } catch (e) { /* ignora payload ilegible */ }
-    if (role === 'service_role') {
-      console.error('ERROR: el JWT de SUPABASE_KEY tiene role="service_role" (clave privada). Abortando.');
-      process.exit(1);
-    }
-    if (role && role !== 'anon') console.warn('Aviso: JWT con role="' + role + '"; se esperaba "anon".');
-    return 'jwt:' + (role || 'sin-role');
+    } catch (e) { /* payload ilegible => se rechaza abajo */ }
+    if (role === 'anon') return 'jwt:anon';
+    console.error('ERROR: el JWT de SUPABASE_KEY tiene role="' + (role || 'desconocido') + '" (se espera "anon"). No puede ir al navegador. Abortando.');
+    process.exit(1);
   }
-  console.warn('Aviso: SUPABASE_KEY no tiene formato conocido (ni sb_publishable_ ni JWT). Verifica que no sea una clave privada.');
-  return 'desconocido';
+  console.error('ERROR: SUPABASE_KEY tiene un formato desconocido (se espera sb_publishable_… o un JWT anon). Por seguridad no se incrusta en el JS público. Abortando.');
+  process.exit(1);
 }
 const keyKind = assertPublicKey(cfg.SUPABASE_KEY);
 
