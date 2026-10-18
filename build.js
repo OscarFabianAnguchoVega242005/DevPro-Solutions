@@ -10,6 +10,10 @@
  *   ADMIN_EMAIL
  *
  * Acepta alias de nombre para evitar el error de "variable vacía".
+ *
+ * Seguridad: la key se incrusta en el JS público, por lo que NUNCA debe ser
+ * privada. Este script aborta el build si detecta sb_secret_…, service_role,
+ * o un JWT con role="service_role".
  */
 const fs = require('fs');
 const path = require('path');
@@ -41,6 +45,32 @@ if (!/^https:\/\/[^/]+\.supabase\.co\/?$/.test(cfg.SUPABASE_URL.replace(/\/$/, '
   console.warn('Aviso: SUPABASE_URL no parece una https://<proyecto>.supabase.co');
 }
 
+const b64url = s => s.replace(/-/g, '+').replace(/_/g, '/');
+function assertPublicKey(key) {
+  const k = String(key).trim();
+  if (/^sb_secret_/i.test(k) || /service_role/i.test(k)) {
+    console.error('ERROR: SUPABASE_KEY es una clave PRIVADA (sb_secret_ / service_role). No puede ir al navegador. Abortando.');
+    process.exit(1);
+  }
+  if (/^sb_publishable_/i.test(k)) return 'publishable';
+  if (k.split('.').length === 3 && /^eyJ/.test(k)) {
+    let role = '';
+    try {
+      const payload = JSON.parse(Buffer.from(b64url(k.split('.')[1]), 'base64').toString('utf8'));
+      role = payload && payload.role ? String(payload.role) : '';
+    } catch (e) { /* ignora payload ilegible */ }
+    if (role === 'service_role') {
+      console.error('ERROR: el JWT de SUPABASE_KEY tiene role="service_role" (clave privada). Abortando.');
+      process.exit(1);
+    }
+    if (role && role !== 'anon') console.warn('Aviso: JWT con role="' + role + '"; se esperaba "anon".');
+    return 'jwt:' + (role || 'sin-role');
+  }
+  console.warn('Aviso: SUPABASE_KEY no tiene formato conocido (ni sb_publishable_ ni JWT). Verifica que no sea una clave privada.');
+  return 'desconocido';
+}
+const keyKind = assertPublicKey(cfg.SUPABASE_KEY);
+
 const out = path.join(__dirname, 'js', 'config.js');
 const body =
   '/* Generado por build.js en Cloudflare Pages. No editar ni subir a Git. */\n' +
@@ -51,4 +81,4 @@ const body =
   '});\n';
 
 fs.writeFileSync(out, body, 'utf8');
-console.log('Generado ' + out + ' (URL y email presentes, key con ' + cfg.SUPABASE_KEY.length + ' caracteres)');
+console.log('Generado ' + out + ' (URL y email presentes; key: ' + keyKind + ', ' + cfg.SUPABASE_KEY.length + ' caracteres)');
