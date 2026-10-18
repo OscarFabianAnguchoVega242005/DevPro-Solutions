@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panel Admin — DevPro Solutions</title>
+<meta name="description" content="Panel de administración de solicitudes y mini apps de DevPro Solutions.">
+<link rel="icon" href="imagenes/logo.png" type="image/png">
+<link rel="stylesheet" href="site.css">
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/core.js" defer></script>
+<script src="js/admin.js" defer></script>
+<script src="js/desk-menu.js" defer></script>
+</head>
+<body class="page-admin">
+<canvas id="bg" aria-hidden="true"></canvas><div class="bar" id="bar"></div><div class="toast" id="toast" role="status"></div>
+
+<!-- ACCESO DENEGADO -->
+<div id="denied" class="denied-screen" hidden>
+  <div class="denied-box">
+    <div class="denied-ico">⛔</div>
+    <h2>Acceso denegado</h2>
+    <p>Esta área es exclusiva del administrador.</p>
+    <a href="index.html" class="btn main">← Volver al inicio</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="desk" hidden>
+  <div class="side-scrim" id="sideScrim"></div>
+
+  <aside class="side" id="side">
+    <a class="side-brand" href="index.html"><img src="imagenes/logo.png" alt="" width="34" height="34"><span>Dev<em>Pro</em></span></a>
+    <nav class="side-nav">
+      <button type="button" class="side-link active" data-view="solicitudes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l2 3h6l2-3h4"/><path d="M5 5h14l2 8v6H3v-6z"/></svg>
+        Solicitudes
+      </button>
+      <button type="button" class="side-link" data-view="apps">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+        Mini Apps
+      </button>
+      <button type="button" class="side-link" data-view="config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M19 7h1M4 17h5M15 17h5"/><circle cx="16" cy="7" r="2.4"/><circle cx="11" cy="17" r="2.4"/></svg>
+        Configuración
+      </button>
+    </nav>
+    <div class="side-foot">
+      <a class="side-link" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Ver sitio
+      </a>
+    </div>
+  </aside>
+
+  <div class="desk-body">
+    <header class="topbar">
+      <div class="tb-head">
+        <button type="button" class="side-toggle" id="sideToggle" aria-label="Abrir menú" aria-controls="side" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="tb-title">
+          <h1 id="viewTitle">Solicitudes</h1>
+          <p id="viewSub">Gestiona los mensajes de tus clientes</p>
+        </div>
+      </div>
+      <div class="tb-actions">
+        <div class="tb-user">
+          <button type="button" class="who-pill" id="deskUserBtn" aria-haspopup="true" aria-expanded="false" aria-controls="deskUserMenu">
+            <img id="tbPhoto" alt="" hidden>
+            <span class="who-fb" id="tbFallback" aria-hidden="true">?</span>
+            <span class="who-name" id="tbName">Admin</span>
+            <svg class="u-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="user-menu" id="deskUserMenu" role="menu">
+            <a class="um-item" href="index.html" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Volver al sitio</a>
+            <button type="button" class="um-item um-out" id="logout" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg>Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="kpis">
+        <div class="kpi"><span class="kpi-l">Total</span><b class="kpi-n accent" id="sTotal">0</b><span class="kpi-chip" id="cTotal">—</span></div>
+        <div class="kpi"><span class="kpi-l">Sin leer</span><b class="kpi-n yellow" id="sSinLeer">0</b><span class="kpi-chip" id="cSinLeer">—</span></div>
+        <div class="kpi"><span class="kpi-l">En proceso</span><b class="kpi-n blue" id="sProceso">0</b><span class="kpi-chip" id="cProceso">—</span></div>
+        <div class="kpi"><span class="kpi-l">Completados</span><b class="kpi-n green" id="sCompletado">0</b><span class="kpi-chip" id="cCompletado">—</span></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Solicitudes por semana</h2><span class="panel-sub" id="chartSub">Últimas 8 semanas</span></div>
+        <div class="chart" id="chart" role="img" aria-label="Solicitudes por semana"></div>
+      </section>
+
+      <section class="view" data-view="solicitudes">
+        <div class="workspace">
+          <div class="list-col">
+            <div class="seg" id="filterSeg" role="group" aria-label="Filtrar solicitudes">
+              <button type="button" class="seg-btn active" data-filter="todos">Todos</button>
+              <button type="button" class="seg-btn" data-filter="no_leidos">Sin leer</button>
+              <button type="button" class="seg-btn" data-filter="pendiente">Pendientes</button>
+              <button type="button" class="seg-btn" data-filter="proceso">En proceso</button>
+              <button type="button" class="seg-btn" data-filter="completado">Completados</button>
+            </div>
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.4-3.4"/></svg>
+              <input class="search" id="search" type="search" placeholder="Buscar cliente o email…" aria-label="Buscar">
+            </div>
+            <div class="req-list" id="cardGrid">
+              <div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>
+            </div>
+          </div>
+          <div class="detail-col">
+            <div class="detail-empty" id="detailEmpty"><div class="de-ico">🗂️</div><p>Selecciona una solicitud para ver el detalle</p></div>
+            <article class="detail" id="detailPanel" hidden></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" data-view="apps" hidden>
+        <div class="panel">
+          <div class="panel-head"><h2>Mini Apps</h2><span class="panel-sub">Publica apps Android para tus clientes</span></div>
+          <div class="aa-grid">
+            <div>
+              <label class="aa-label" for="appName">Nombre de la app</label>
+              <input id="appName" class="aa-input" placeholder="Ej: Calculadora Pro">
+            </div>
+            <div>
+              <label class="aa-label" for="appEmoji">Emoji / Icono</label>
+              <input id="appEmoji" class="aa-input" placeholder="Ej: 🧮">
+            </div>
+          </div>
+          <div class="aa-field">
+            <label class="aa-label" for="appDesc">Descripción</label>
+            <textarea id="appDesc" class="aa-textarea" rows="2" placeholder="Descripción breve de la app"></textarea>
+          </div>
+          <div class="aa-field">
+            <label class="aa-label" for="appUrl">URL de descarga del APK (https)</label>
+            <input id="appUrl" class="aa-input" placeholder="https://github.com/.../app.apk">
+          </div>
+          <div class="aa-actions">
+            <button type="button" class="btn-save" id="addAppBtn">➕ Añadir app</button>
+            <span class="aa-note">Usa GitHub Releases o donde tengas alojado el APK.</span>
+          </div>
+          <div class="app-list" id="appListAdmin"></div>
+        </div>
+      </section>
+
+      <section class="view" data-view="config" hidden>
+        <div class="config-panel">
+          <div class="config-year">
+            <label for="inputYear">Año footer:</label>
+            <input type="number" id="inputYear" min="2020" max="2099" value="2026">
+            <button type="button" class="btn-save" id="saveYear">Guardar</button>
+          </div>
+          <div class="toggle-wrap">
+            <div>
+              <div class="toggle-title">Disponibilidad</div>
+              <div class="toggle-status" id="toggleStatusText">Cargando…</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggleDisponible">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- DETALLE EN MÓVIL -->
+<dialog id="modal" class="dlg">
+  <div class="modal-inner">
+    <div class="modal-handle"></div>
+    <div id="modalBody"></div>
+  </div>
+</dialog>
+</body>
+</html>

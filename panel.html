@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mis Solicitudes — DevPro Solutions</title>
+<meta name="description" content="Consulta el estado de tus solicitudes enviadas a DevPro Solutions.">
+<link rel="icon" href="imagenes/logo.png" type="image/png">
+<link rel="stylesheet" href="site.css">
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/core.js" defer></script>
+<script src="js/panel.js" defer></script>
+<script src="js/desk-menu.js" defer></script>
+</head>
+<body class="page-panel">
+<canvas id="bg" aria-hidden="true"></canvas><div class="bar" id="bar"></div><div class="toast" id="toast" role="status"></div>
+
+<div id="dash" class="desk" hidden>
+  <div class="side-scrim" id="sideScrim"></div>
+
+  <aside class="side" id="side">
+    <a class="side-brand" href="index.html"><img src="imagenes/logo.png" alt="" width="34" height="34"><span>Dev<em>Pro</em></span></a>
+    <nav class="side-nav">
+      <button type="button" class="side-link active" data-view="sol">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h4l2 3h6l2-3h4"/><path d="M5 5h14l2 8v6H3v-6z"/></svg>
+        Mis solicitudes
+      </button>
+      <button type="button" class="side-link" id="sideNew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nueva solicitud
+      </button>
+    </nav>
+    <div class="side-foot">
+      <a class="side-link" href="index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        Ver sitio
+      </a>
+    </div>
+  </aside>
+
+  <div class="desk-body">
+    <header class="topbar">
+      <div class="tb-head">
+        <button type="button" class="side-toggle" id="sideToggle" aria-label="Abrir menú" aria-controls="side" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <div class="tb-title">
+          <h1>Mis solicitudes</h1>
+          <p>Historial de proyectos enviados a DevPro Solutions</p>
+        </div>
+      </div>
+      <div class="tb-actions">
+        <div class="tb-user">
+          <button type="button" class="who-pill" id="deskUserBtn" aria-haspopup="true" aria-expanded="false" aria-controls="deskUserMenu">
+            <img id="userPhoto" alt="" hidden>
+            <span class="who-fb" id="userFallback" aria-hidden="true">?</span>
+            <span class="who-name" id="userName">—</span>
+            <svg class="u-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="user-menu" id="deskUserMenu" role="menu">
+            <a class="um-item" href="index.html" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Volver al sitio</a>
+            <button type="button" class="um-item um-out" id="logout" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h10"/></svg>Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="kpis">
+        <div class="kpi"><span class="kpi-l">Total</span><b class="kpi-n accent" id="statTotal">0</b><span class="kpi-chip" id="statTotalChip">—</span></div>
+        <div class="kpi"><span class="kpi-l">En proceso</span><b class="kpi-n blue" id="statProceso">0</b><span class="kpi-chip" id="statProcesoChip">—</span></div>
+        <div class="kpi"><span class="kpi-l">Completados</span><b class="kpi-n green" id="statCompletado">0</b><span class="kpi-chip" id="statCompletadoChip">—</span></div>
+        <div class="kpi"><span class="kpi-l">Esperando</span><b class="kpi-n yellow" id="statEspera">0</b><span class="kpi-chip" id="statEsperaChip">—</span></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Mis solicitudes por semana</h2><span class="panel-sub" id="chartSub">Últimas 8 semanas</span></div>
+        <div class="chart" id="chart" role="img" aria-label="Solicitudes por semana"></div>
+      </section>
+
+      <div class="panel-hero">
+        <div><h1>Historial</h1><p>Sigue el estado de cada proyecto</p></div>
+        <button type="button" class="btn-new" id="btnNew">+ Nueva solicitud</button>
+      </div>
+
+      <div class="sol-list" id="solList">
+        <div class="skel"></div><div class="skel"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- DETALLE -->
+<dialog id="detail" class="dlg">
+  <div class="modal-inner">
+    <div class="modal-header">
+      <h3 id="mServicio">—</h3>
+      <button type="button" class="modal-close" id="detailClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="mfield"><div class="mfield-label">Estado</div><div id="mEstado"></div></div>
+    <div class="mfield"><div class="mfield-label">Progreso del proyecto</div><div class="tl" id="mTimeline"></div></div>
+    <div class="mfield"><div class="mfield-label">Fecha de envío</div><div class="mfield-val" id="mFecha">—</div></div>
+    <div class="mfield" id="mTelWrap"><div class="mfield-label">WhatsApp registrado</div><div class="mfield-val" id="mTel">—</div></div>
+    <div class="mfield"><div class="mfield-label">Tu mensaje</div><div class="mfield-val mbox" id="mMensaje">—</div></div>
+    <div class="mfield"><div class="mfield-label">Respuesta del equipo</div><div class="mfield-val mresp" id="mRespondido"></div></div>
+  </div>
+</dialog>
+
+<!-- NUEVA SOLICITUD -->
+<dialog id="newDialog" class="dlg">
+  <div class="modal-inner">
+    <div class="modal-header">
+      <h3>Nueva solicitud</h3>
+      <button type="button" class="modal-close" id="newClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="user-info-bar">
+      <img id="fmPhoto" alt="" hidden>
+      <div class="uib-fb" id="fmFallback">?</div>
+      <div class="uib-info">
+        <div class="uib-name" id="fmName">—</div>
+        <div class="uib-email" id="fmEmail">—</div>
+      </div>
+      <span class="badge-google">
+        <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Google
+      </span>
+    </div>
+    <form id="newForm">
+      <div class="fgroup">
+        <label for="ns-servicio">¿Qué servicio necesitas?</label>
+        <select id="ns-servicio">
+          <option value="">Selecciona un servicio...</option>
+          <option>Página web</option>
+          <option>Aplicación móvil Android</option>
+          <option>Tienda online</option>
+          <option>Sistema a medida</option>
+          <option>No sé, necesito asesoría</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <label for="ns-telefono">WhatsApp / Teléfono (opcional)</label>
+        <div class="tel-row">
+          <select id="ns-pais" aria-label="País">
+            <option value="+57">🇨🇴 +57</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+1">🇨🇦 +1</option>
+            <option value="+52">🇲🇽 +52</option>
+            <option value="+54">🇦🇷 +54</option>
+            <option value="+55">🇧🇷 +55</option>
+            <option value="+56">🇨🇱 +56</option>
+            <option value="+51">🇵🇪 +51</option>
+            <option value="+58">🇻🇪 +58</option>
+            <option value="+593">🇪🇨 +593</option>
+            <option value="+591">🇧🇴 +591</option>
+            <option value="+595">🇵🇾 +595</option>
+            <option value="+598">🇺🇾 +598</option>
+            <option value="+507">🇵🇦 +507</option>
+            <option value="+506">🇨🇷 +506</option>
+            <option value="+502">🇬🇹 +502</option>
+            <option value="+503">🇸🇻 +503</option>
+            <option value="+504">🇭🇳 +504</option>
+            <option value="+505">🇳🇮 +505</option>
+            <option value="+1809">🇩🇴 +1809</option>
+            <option value="+34">🇪🇸 +34</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+33">🇫🇷 +33</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+39">🇮🇹 +39</option>
+            <option value="+351">🇵🇹 +351</option>
+            <option value="+31">🇳🇱 +31</option>
+            <option value="+61">🇦🇺 +61</option>
+            <option value="+81">🇯🇵 +81</option>
+            <option value="+82">🇰🇷 +82</option>
+            <option value="+86">🇨🇳 +86</option>
+            <option value="+91">🇮🇳 +91</option>
+            <option value="+971">🇦🇪 +971</option>
+          </select>
+          <input type="tel" id="ns-telefono" inputmode="numeric" maxlength="15" placeholder="300 000 0000">
+        </div>
+      </div>
+      <div class="fgroup">
+        <label for="ns-mensaje">Cuéntame tu proyecto *</label>
+        <textarea id="ns-mensaje" rows="5" maxlength="4000" required placeholder="Describe tu negocio, qué quieres lograr, referencias de diseño, presupuesto aproximado..."></textarea>
+      </div>
+      <button type="submit" class="btn-enviar" id="btnEnviar">Enviar solicitud →</button>
+    </form>
+  </div>
+</dialog>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Archivos de configuracion con credenciales reales
+js/config.js
+supabase/policies.sql
+
+# Dependencias y entornos
+node_modules/
+.env
+.env.local
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Cloudflare (despliegue local con Wrangler)
+.wrangler/
