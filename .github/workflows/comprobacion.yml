@@ -1,0 +1,48 @@
+name: Comprobación básica
+
+# Se ejecuta al guardar cambios en main, al proponer cambios y manualmente.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Solo necesita leer el repositorio; no puede publicar cambios.
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    name: Revisar JavaScript y construcción
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Obtener una copia del código
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+
+      - name: Comprobar la sintaxis del JavaScript
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check build.js
+          while IFS= read -r -d '' archivo; do
+            node --check "$archivo"
+          done < <(find js -type f -name '*.js' -print0)
+
+      - name: Probar la construcción con datos ficticios
+        # Estos valores son de prueba, no permiten conectarse a tu proyecto.
+        env:
+          SUPABASE_URL: https://ejemplo-ci.supabase.co
+          SUPABASE_KEY: sb_publishable_SOLO_PRUEBA_SIN_ACCESO_REAL
+          ADMIN_EMAIL: pruebas@example.invalid
+        run: |
+          node build.js
+          node --check js/config.js
